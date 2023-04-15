@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from config import TOKEN, DICT_EMPLOYEE
 import logging
 from aiogram import Bot, Dispatcher, executor, types
