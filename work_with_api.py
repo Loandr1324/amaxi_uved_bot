@@ -93,7 +93,7 @@ async def create_ship(order):
     print(len(list_pos))
     print(list_pos)
     if len(list_pos) == 0:
-        print(f"Заказ {order} не содержит позиций со статусом 'Готов к выдаче'")
+        print(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
     # Создаем отгрузку по заказу
     # result = AbcpTS().post_ts_ship_operation(order, dict_order[order], '144929')
