@@ -88,8 +88,8 @@ async def create_ship(order):
     :param order: Номер заказа для создания отгрузки.
     :return: result
     """
-    # Получить список позиций заказа со статусом "Готов к выдаче"
-    id_user, list_pos = await search_order_position_to_change(order, '188361')
+    # Получить список позиций заказа со статусом "Есть в наличии"
+    id_user, list_pos = await search_order_position_to_change(order, '233596')
     print(len(list_pos))
     print(list_pos)
     if len(list_pos) == 0:
