@@ -195,8 +195,8 @@ async def callbacks(call: types.CallbackQuery):
     merch_name = DICT_EMPLOYEE[call.from_user.id]
 
     time_finish_ass_order = call.message.edit_date
-    date = call.data.split('_')[4]
-    time_assem = round((time_finish_ass_order - datetime.strptime(date, '%H:%M:%S')).seconds / 60, 1)
+    date = call.data.split('_')[3]
+    time_assem = round((time_finish_ass_order - datetime.strptime(date, '%H:%M')).seconds / 60, 1)
 
     message_text = call.message.text
     if result:
