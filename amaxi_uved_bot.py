@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
 
 from config import TOKEN, DICT_EMPLOYEE
 import logging
@@ -187,6 +188,16 @@ async def callbacks(call: types.CallbackQuery):
     Добавляем к сообщению время окончанию сборки в формате HH:MM, которое получаем из времени
     последнего редактирования сообщения.
     """
+
+    # Указываем информацию на кнопке, что выполняется попытка отгрузки
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton(
+        text=f"Создаётся документ отгрузки...",
+        callback_data="pass"
+    ))
+
+    await call.message.edit_text(call.message.text, entities=call.message.entities, reply_markup=keyboard)
+
     # Создаём отгрузку по заказу
     order_number = call.message.text.split(' ')[1]
     print(f'Отгружаем позиции по заказ №{order_number}')
