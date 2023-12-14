@@ -1,6 +1,7 @@
 import asyncio
 from aioabcpapi import Abcp
 from config import HOST_API, USER_API, PASSWORD_API, DISTRIB_ID, DICT_CLIENT_CONTRACT
+from loguru import logger
 
 host, login, password = HOST_API, USER_API, PASSWORD_API
 api = Abcp(host, login, password)
@@ -16,14 +17,14 @@ async def search_order_position_to_change(num_order, id_status_old: int or str =
 
     try:
         order = await api.cp.admin.orders.get_order(num_order)
-        print(order)
+        # logger.info(order)
 
         id_item = [item['id'] for item in order['positions']
                    if (item['statusCode'] == id_status_old and item['distributorId'] in DISTRIB_ID)]
         return [order['userId'], id_item]
     except Exception as ex:
-        print(ex)
-        print(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
+        logger.info(ex)
+        logger.info(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
         return [0, []]
 
 
@@ -36,14 +37,14 @@ async def change_status_position(num_order, list_id_pos: list, new_status: int o
     :return:
     """
     list_positions = [{'id': item, 'statusCode': new_status} for item in list_id_pos]
-    print(list_positions)
+    logger.info(list_positions)
     try:
         result = await api.cp.admin.orders.create_or_edit_order(number=num_order, order_positions=list_positions)
-        print(result)
+        logger.info(result)
         return True
     except Exception as ex:
-        print(ex)
-        print(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
+        logger.info(ex)
+        logger.info(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
         return False
 
 
@@ -55,15 +56,15 @@ async def change_status_pos(order):
     """
     # Получить список позиций заказа со статусом "Есть в наличии"
     list_pos = await search_order_position_to_change(order, '233596')
-    print(len(list_pos))
-    print(list_pos)
+    logger.info(len(list_pos))
+    logger.info(list_pos)
     if len(list_pos) == 0:
-        print(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
+        logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
 
     # Изменить статус позиций заказа на "Готов к выдаче"
     result = await change_status_position(order, list_pos, '188361')
-    print(result)
+    logger.info(result)
     return result
 
 
@@ -74,11 +75,11 @@ async def create_by(id_contract: int, list_id_pos: list, new_status: int or str 
             agreement_id=id_contract, account_details_id=8183, loc_id=0,
             pp_ids=list_id_pos, status_id=new_status, done_right_away=1
         )
-        print(result)
+        logger.info(result)
         return True
     except Exception as ex:
-        print(ex)
-        print(f"От платформы пришла ошибка '{ex}' при создании отгрузки по позициям {list_id_pos}")
+        logger.info(ex)
+        logger.info(f"От платформы пришла ошибка '{ex}' при создании отгрузки по позициям {list_id_pos}")
         return False
 
 
@@ -90,15 +91,15 @@ async def create_ship(order):
     """
     # Получить список позиций заказа со статусом "Есть в наличии"
     id_user, list_pos = await search_order_position_to_change(order, '233596')
-    print(len(list_pos))
-    print(list_pos)
+    logger.info(len(list_pos))
+    logger.info(list_pos)
     if len(list_pos) == 0:
-        print(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
+        logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
     # Создаем отгрузку по заказу
     # result = AbcpTS().post_ts_ship_operation(order, dict_order[order], '144929')
     result = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
-    print(result)
+    logger.info(result)
     return result
 
 
@@ -106,6 +107,6 @@ if __name__ == '__main__':
     # asyncio.run(change_status_pos('125295275'))
     # list_posit = asyncio.run(search_order_position_to_change('124904514', '188361'))
     user, pos = asyncio.run(search_order_position_to_change('126045297 ', '144929'))
-    print(user, pos)
-    print(len(pos))
+    logger.info(user, pos)
+    logger.info(len(pos))
 

@@ -1,18 +1,20 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import time
 
-from config import TOKEN, DICT_EMPLOYEE
-import logging
+from config import TOKEN, DICT_EMPLOYEE, FILE_NAME_LOG
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 from datetime import datetime
 from work_with_api import create_ship
+from loguru import logger
 # from work_with_api import change_status_pos  # TODO Статусы пока не меняем
 
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
+logger.add(FILE_NAME_LOG,
+           format="{time:DD/MM/YY HH:mm:ss} - {file} - {level} - {message}",
+           level="INFO",
+           rotation="1 week",
+           compression="zip")
 
 # Инициализация бота и диспетчера
 bot = Bot(token=TOKEN)
@@ -82,13 +84,13 @@ async def callbacks(call: types.CallbackQuery):
             "⚠️Ошибка - требует обработки"
             callback_data="pass".
     """
-    print(call)
+    # logger.info(call)
     # Меняем статус позиций в заказе на “готов к выдаче”
     order_number = call.message.text.split(' ')[1]
-    print(f'Отрабатывается заказ №{order_number}')
+    logger.info(f'Отрабатывается заказ №{order_number}')
     # result = await change_status_pos(order_number)  # TODO Пока не используем перевод статуса заказа
     result = True  # TODO Удалить, если начнём использовать перевод статусов заказа
-    print(result)
+    # logger.info(result)
 
     # Получаем данные по времени из data
     time_create_order: str = call.data.split('_')[2]
@@ -122,16 +124,16 @@ async def callbacks(call: types.CallbackQuery) -> None:
     При нажатии на кнопку "🟡 Завершить сборку (С: {merch_name})" (callback_data="stop_assembly*"):
     Если кнопку нажал тот же пользователь, что и переводил статус сообщения в "Завершить сборку".
     Заменяем эту кнопку на две кнопки в ряд:
-        "🟢 Завершить" - callback_data=f"stop_assembl_yes_{time}",
-        "🔴 Отмена" - callback_data=f"stop_assembl_no_{time}",
-    где time это время создания заказа в формате HH:MM и время начала сборки в формате HH:MM:SS через знак "_".
+        "🟢 Завершить" - callback_data=f"stop_assembl_yes_{time_call}",
+        "🔴 Отмена" - callback_data=f"stop_assembl_no_{time_call}",
+    где time_call это время создания заказа в формате HH:MM и время начала сборки в формате HH:MM:SS через знак "_".
     Данные времени берём из полученного callback_data кнопки "🟡 Завершить сборку (С: {merch_name})",
     после второго и третьего знака "_".
     Пример получаемого callback_data="stop_assembly_13:39_13:41:12".
     Пример формируемого callback_data="stop_assembl_no_13:39_13:41:12".
     """
     split_call = call.data.split('_')
-    time = split_call[2] + '_' + split_call[3]
+    time_call = split_call[2] + '_' + split_call[3]
     correct_user = split_call[4]
 
     if call.from_user.id != int(correct_user):
@@ -140,8 +142,8 @@ async def callbacks(call: types.CallbackQuery) -> None:
 
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     buttons = [
-        types.InlineKeyboardButton(text="🟢 Завершить", callback_data=f"stop_assembl_yes_{time}"),
-        types.InlineKeyboardButton(text="🔴 Отмена", callback_data=f"stop_assembl_no_{time}")
+        types.InlineKeyboardButton(text="🟢 Завершить", callback_data=f"stop_assembl_yes_{time_call}"),
+        types.InlineKeyboardButton(text="🔴 Отмена", callback_data=f"stop_assembl_no_{time_call}")
     ]
     keyboard.add(*buttons)
     await call.message.edit_reply_markup(reply_markup=keyboard)
@@ -200,7 +202,7 @@ async def callbacks(call: types.CallbackQuery):
 
     # Создаём отгрузку по заказу
     order_number = call.message.text.split(' ')[1]
-    print(f'Отгружаем позиции по заказ №{order_number}')
+    logger.info(f'Отгружаем позиции по заказу №{order_number}')
     result = await create_ship(order_number)
 
     merch_name = DICT_EMPLOYEE[call.from_user.id]
