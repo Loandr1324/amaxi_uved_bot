@@ -86,7 +86,7 @@ async def create_by(id_contract: int, list_id_pos: list, new_status: int or str 
 async def create_ship(order):
     """
     Создаем отгрузку по заказу.
-    :param order: Номер заказа для создания отгрузки.
+    :param order: Номер заказа для создания отгрузки
     :return: result
     """
     # Получить список позиций заказа со статусом "Есть в наличии"
@@ -96,17 +96,25 @@ async def create_ship(order):
     if len(list_pos) == 0:
         logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
+
     # Создаем отгрузку по заказу
-    # result = AbcpTS().post_ts_ship_operation(order, dict_order[order], '144929')
-    result = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
-    logger.info(result)
-    return result
+    result_create = False
+    count = 0
+    while not result_create or count < 2:
+        logger.info(f"{count + 1}-ая попытка создания отгрузки")
+        result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
+        count += 1
+    logger.info(result_create)
+    return result_create
 
 
 if __name__ == '__main__':
     # asyncio.run(change_status_pos('125295275'))
     # list_posit = asyncio.run(search_order_position_to_change('124904514', '188361'))
-    user, pos = asyncio.run(search_order_position_to_change('126045297 ', '144929'))
-    logger.info(user, pos)
-    logger.info(len(pos))
+    # user, pos = asyncio.run(search_order_position_to_change('154313232', '144929'))
+    # user, pos = asyncio.run(search_order_position_to_change('154313232', '233596'))
+    # logger.info(user, pos)
+    # logger.info(len(pos))
+    result = asyncio.run(create_ship('154442784'))
+    logger.info(result)
 
