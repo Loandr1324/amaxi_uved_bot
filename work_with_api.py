@@ -100,6 +100,7 @@ async def create_ship(order):
     # Создаем отгрузку по заказу
     result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
     if not result_create:
+        logger.info(f"Первая попытка создания отгрузки не удалась. Выполняем вторую попытку.")
         result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
     logger.info(result_create)
     return result_create
