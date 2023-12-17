@@ -98,12 +98,9 @@ async def create_ship(order):
         return False
 
     # Создаем отгрузку по заказу
-    result_create = False
-    count = 0
-    # while not result_create or count < 2:
-    #     logger.info(f"{count + 1}-ая попытка создания отгрузки")
     result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
-        # count += 1
+    if not result_create:
+        result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
     logger.info(result_create)
     return result_create
 
