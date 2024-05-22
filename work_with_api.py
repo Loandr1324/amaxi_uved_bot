@@ -100,12 +100,14 @@ async def create_ship(order):
     # Получаем договор клиента
     user_agreement = DICT_CLIENT_CONTRACT.get(id_user)
 
+    # Если договор не найден, то запрашиваем по API
     if not user_agreement:
-        try:
-            user_agreement = await get_agreement(id_user)
-        except BaseException as ex:
-            logger.error(f"Не удалось получить договор по API: {ex}")
-            return None
+        return None
+        # try: TODO Раскомментировать блок при необходимости
+        #     user_agreement = await get_agreement(id_user)
+        # except BaseException as ex:
+        #     logger.error(f"Не удалось получить договор по API: {ex}")
+        #     return None
 
     # Создаем отгрузку по заказу
     result_create = await create_by(user_agreement, list_pos, '144929')
