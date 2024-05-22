@@ -97,13 +97,32 @@ async def create_ship(order):
         logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
 
+    # Получаем договор клиента
+    user_agreement = DICT_CLIENT_CONTRACT.get(id_user)
+
+    if not user_agreement:
+        try:
+            user_agreement = await get_agreement(id_user)
+        except BaseException as ex:
+            logger.error(f"Не удалось получить договор по API: {ex}")
+            return None
+
     # Создаем отгрузку по заказу
-    result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
+    result_create = await create_by(user_agreement, list_pos, '144929')
     if not result_create:
         logger.info(f"Первая попытка создания отгрузки не удалась. Выполняем вторую попытку.")
-        result_create = await create_by(DICT_CLIENT_CONTRACT[id_user], list_pos, '144929')
+        result_create = await create_by(user_agreement, list_pos, '144929')
     logger.info(result_create)
     return result_create
+
+
+async def get_agreement(id_user: str) -> int:
+    """
+    Получаем список договоров по API от ABCP
+    :param id_user: Идентификатор клиента на платформе ABCP
+    """
+    list_agreement = await api.ts.admin.agrements.get_list(contractor_ids=id_user)
+    return list_agreement[0]['id']
 
 
 if __name__ == '__main__':
@@ -113,6 +132,10 @@ if __name__ == '__main__':
     # user, pos = asyncio.run(search_order_position_to_change('154313232', '233596'))
     # logger.info(user, pos)
     # logger.info(len(pos))
-    result = asyncio.run(create_ship('154442784'))
-    logger.info(result)
-
+    # result = asyncio.run(create_ship('154442784'))
+    # for key in DICT_CLIENT_CONTRACT.keys():
+    #
+    #     result = asyncio.run(get_agreement(key))
+    #     logger.error(f"{DICT_CLIENT_CONTRACT[key]=}")
+    #     logger.error(f"{result=}")
+    logger.info(f"Используем для тестов")
