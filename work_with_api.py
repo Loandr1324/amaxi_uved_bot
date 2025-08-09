@@ -102,12 +102,11 @@ async def create_ship(order):
 
     # Если договор не найден, то запрашиваем по API
     if not user_agreement:
-        return None
-        # try: TODO Раскомментировать блок при необходимости
-        #     user_agreement = await get_agreement(id_user)
-        # except BaseException as ex:
-        #     logger.error(f"Не удалось получить договор по API: {ex}")
-        #     return None
+        try:
+            user_agreement = await get_agreement(id_user)
+        except BaseException as ex:
+            logger.error(f"Не удалось получить договор по API: {ex}")
+            return None
 
     # Создаем отгрузку по заказу
     result_create = await create_by(user_agreement, list_pos, '144929')
@@ -118,13 +117,26 @@ async def create_ship(order):
     return result_create
 
 
-async def get_agreement(id_user: str) -> int:
+async def get_agreement(id_user: str) -> int | None:
     """
     Получаем список договоров по API от ABCP
     :param id_user: Идентификатор клиента на платформе ABCP
+    :return: ID первого договора или None, если договоров нет или произошла ошибка
     """
-    list_agreement = await api.ts.admin.agrements.get_list(contractor_ids=id_user)
-    return list_agreement[0]['id']
+    try:
+        list_agreement = await api.ts.admin.agrements.get_list(contractor_ids=id_user)
+
+        # Проверяем, что это словарь и содержит ключ 'list'
+        if not isinstance(list_agreement, dict):
+            return None
+
+        list_agreement = list_agreement.get('list')
+        return list_agreement[0]['id'] if list_agreement else None
+
+    # Записываем ошибки при запросе договора
+    except Exception as ex:
+        logger.error(f"Произошла ошибка при запросе договора {ex=}")
+        return None
 
 
 if __name__ == '__main__':
