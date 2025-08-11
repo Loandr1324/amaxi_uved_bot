@@ -48,22 +48,24 @@ async def change_status_position(num_order, list_id_pos: list, new_status: int o
         return False
 
 
-async def change_status_pos(order):
+async def change_status_pos(order, id_status_old='233596', id_new_status='188361'):
     """
-    Меняем статусы позиций заказа c "Есть в наличии" на "Готов к выдаче".
-    :param order: Номер заказа для изменения статуса позиций.
+    Меняем статусы позиций заказа с id_status_old на id_new_status
+    :param order: Номер заказа для изменения статуса позиций
+    :param id_status_old: идентификатор статуса позиций для изменения
+    :param id_new_status: идентификатор нового статуса для позиций
     :return: result
     """
-    # Получить список позиций заказа со статусом "Есть в наличии"
-    list_pos = await search_order_position_to_change(order, '233596')
+    # Получить список позиций заказа со статусом id_status_old
+    list_pos = await search_order_position_to_change(order, id_status_old)
     logger.info(len(list_pos))
     logger.info(list_pos)
     if len(list_pos) == 0:
         logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
         return False
 
-    # Изменить статус позиций заказа на "Готов к выдаче"
-    result = await change_status_position(order, list_pos, '188361')
+    # Изменить статус позиций заказа на id_new_status
+    result = await change_status_position(order, list_pos, id_new_status)
     logger.info(result)
     return result
 
