@@ -5,7 +5,7 @@ from config import TOKEN, DICT_EMPLOYEE, FILE_NAME_LOG
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 from datetime import datetime
-from work_with_api import create_ship
+from work_with_api import create_ship, change_status_pos
 from loguru import logger
 # from work_with_api import change_status_pos  # TODO Статусы пока не меняем
 
@@ -179,6 +179,8 @@ async def callbacks(call: types.CallbackQuery) -> None:
 @dp.callback_query_handler(Text(startswith="stop_assembl_yes"))
 async def callbacks(call: types.CallbackQuery):
     """
+    Обработчик нажатия кнопки завершения сборки с разной логикой в зависимости от типа операции
+
     При нажатии на кнопку "🟢 Завершить" (callback_data="stop_assembl_yes*") заменяем ИнЛайн клавиатуру
     и выводим одну кнопку:
         "Собран за {time_assem} мин (С: {merch_name})", где
@@ -190,27 +192,50 @@ async def callbacks(call: types.CallbackQuery):
     Добавляем к сообщению время окончанию сборки в формате HH:MM, которое получаем из времени
     последнего редактирования сообщения.
     """
+    # Получаем текст сообщения и разбиваем на строки
+    message_lines = call.message.text.split('\n')
+
+    # Определяем номер заказа клиента для изменения
+    order_number = message_lines[0].split(' ')[1]
+    logger.info(f'Работаем с позициями по заказу №{order_number}')
+
+    # Проверяем вторую строку на наличие фразы "В заказ клиента"
+    if len(message_lines) > 1 and "В заказ клиента" in message_lines[1]:
+        # Подставляем тип операции "комплектация" # 1 - отгрузка, 0 - комплектация, возможны другие значения
+        operation_type = 0
+        text_await_kb = f"Изменяется статус заказа..."
+    else:
+        # Подставляем тип операции "отгрузка" # 1 - отгрузка, 0 - комплектация, возможны другие значения
+        operation_type = 1
+        text_await_kb = f"Создаётся документ отгрузки..."
 
     # Указываем информацию на кнопке, что выполняется попытка отгрузки
     keyboard = types.InlineKeyboardMarkup()
     keyboard.add(types.InlineKeyboardButton(
-        text=f"Создаётся документ отгрузки...",
+        text=text_await_kb,
         callback_data="pass"
     ))
 
     await call.message.edit_text(call.message.text, entities=call.message.entities, reply_markup=keyboard)
 
-    # Создаём отгрузку по заказу
-    order_number = call.message.text.split(' ')[1]
-    logger.info(f'Отгружаем позиции по заказу №{order_number}')
-    result = await create_ship(order_number)
+    # Выполняем необходимую операцию
+    result = None
+    if operation_type == 1:
+        # Создаём отгрузку по заказу
+        result = await create_ship(order_number)
+    elif operation_type == 0:
+        # Изменяем статус позиций
+        result = await change_status_pos(order_number, id_status_old='419588', id_new_status='144928')
 
+    # Определяем имя сборщика
     merch_name = DICT_EMPLOYEE[call.from_user.id]
 
+    # Определяем время завершения операции
     time_finish_ass_order = call.message.edit_date
     date = call.data.split('_')[3]
     time_assem = round((time_finish_ass_order - datetime.strptime(date, '%H:%M')).seconds / 60, 1)
 
+    # Изменяем текст и клавиатуру исходного сообщения
     message_text = call.message.text
     if result:
         # Дополняем текст сообщения
@@ -242,4 +267,3 @@ async def callbacks(call: types.CallbackQuery):
 if __name__ == "__main__":
     # Запуск бота
     executor.start_polling(dp)
-
