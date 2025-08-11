@@ -25,7 +25,7 @@ async def search_order_position_to_change(num_order, id_status_old: int or str =
     except Exception as ex:
         logger.info(ex)
         logger.info(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
-        return []
+        return [0, []]
 
 
 async def change_status_position(num_order, list_id_pos: list, new_status: int or str = '188361'):
@@ -57,7 +57,7 @@ async def change_status_pos(order, id_status_old='233596', id_new_status='188361
     :return: result
     """
     # Получить список позиций заказа со статусом id_status_old
-    list_pos = await search_order_position_to_change(order, id_status_old)
+    id_user, list_pos = await search_order_position_to_change(order, id_status_old)
     logger.info(len(list_pos))
     logger.info(list_pos)
     if len(list_pos) == 0:
