@@ -204,6 +204,10 @@ async def callbacks(call: types.CallbackQuery):
         # Подставляем тип операции "комплектация" # 1 - отгрузка, 0 - комплектация, возможны другие значения
         operation_type = 0
         text_await_kb = f"Изменяется статус заказа..."
+    elif len(message_lines) > 1 and "✅ Готовый заказ" in message_lines[1]:
+        # Подставляем тип операции "готов к выдаче" # 1 - отгрузка, 0 - комплектация, возможны другие значения
+        operation_type = 2
+        text_await_kb = f"Изменяется статус заказа..."
     else:
         # Подставляем тип операции "отгрузка" # 1 - отгрузка, 0 - комплектация, возможны другие значения
         operation_type = 1
@@ -226,6 +230,9 @@ async def callbacks(call: types.CallbackQuery):
     elif operation_type == 0:
         # Изменяем статус позиций
         result = await change_status_pos(order_number, id_status_old='419588', id_new_status='144928')
+    elif operation_type == 2:
+        # Изменяем статус позиций
+        result = await change_status_pos(order_number, id_status_old='419405', id_new_status='188361')
 
     # Определяем имя сборщика
     merch_name = DICT_EMPLOYEE[call.from_user.id]
