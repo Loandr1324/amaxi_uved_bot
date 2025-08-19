@@ -235,7 +235,9 @@ async def callbacks(call: types.CallbackQuery):
         result = await change_status_pos(order_number, id_status_old='419588', id_new_status='144928')
     elif operation_type == 2:
         # Изменяем статус позиций
-        result = await change_status_pos(order_number, id_status_old='419405', id_new_status='188361')
+        result = await change_status_pos(
+            order_number, id_status_old='419405', id_new_status='188361', check_distributor=False
+        )
 
     # Определяем имя сборщика
     merch_name = DICT_EMPLOYEE[call.from_user.id]
