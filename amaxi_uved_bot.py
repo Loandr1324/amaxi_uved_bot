@@ -198,13 +198,14 @@ async def callbacks(call: types.CallbackQuery):
     # Определяем номер заказа клиента для изменения
     order_number = message_lines[0].split(' ')[1]
     logger.info(f'Работаем с позициями по заказу №{order_number}')
+    logger.info(f'Отображаем строку для определения условия: {message_lines}')
 
     # Проверяем вторую строку на наличие фразы "В заказ клиента"
     if len(message_lines) > 1 and "В заказ клиента" in message_lines[1]:
         # Подставляем тип операции "комплектация" # 1 - отгрузка, 0 - комплектация, возможны другие значения
         operation_type = 0
         text_await_kb = f"Изменяется статус заказа..."
-    elif len(message_lines) > 1 and "✅ Готовый заказ" in message_lines[1]:
+    elif len(message_lines) > 1 and "Готовый заказ" in message_lines[1]:
         # Подставляем тип операции "готов к выдаче" # 1 - отгрузка, 0 - комплектация, возможны другие значения
         operation_type = 2
         text_await_kb = f"Изменяется статус заказа..."
@@ -212,6 +213,8 @@ async def callbacks(call: types.CallbackQuery):
         # Подставляем тип операции "отгрузка" # 1 - отгрузка, 0 - комплектация, возможны другие значения
         operation_type = 1
         text_await_kb = f"Создаётся документ отгрузки..."
+
+    logger.info(f'Определили тип операции: {operation_type}')
 
     # Указываем информацию на кнопке, что выполняется попытка отгрузки
     keyboard = types.InlineKeyboardMarkup()
