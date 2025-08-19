@@ -7,24 +7,39 @@ host, login, password = HOST_API, USER_API, PASSWORD_API
 api = Abcp(host, login, password)
 
 
-async def search_order_position_to_change(num_order, id_status_old: int or str = '233596') -> list:
+async def search_order_position_to_change(
+        num_order: int or str,
+        id_status_old: int or str = '233596',
+        check_distributor: bool = True
+) -> list:
     """
     Находим позиции, которые необходимо изменить в заказе
-    :param id_status_old: Id статус позиции, которые необходимо изменить
+
     :param num_order: Номер заказа
-    :return:
+    :param id_status_old: Id статус позиции, которые необходимо изменить
+    :param check_distributor: Проверять ли принадлежность дистрибьютору
+    :return: [userId, list_of_position_ids]
     """
 
     try:
         order = await api.cp.admin.orders.get_order(num_order)
-        # logger.info(order)
 
-        id_item = [item['id'] for item in order['positions']
-                   if (item['statusCode'] == id_status_old and item['distributorId'] in DISTRIB_ID)]
+        id_item = []
+        for item in order['positions']:
+            # Базовая проверка статуса
+            if item['statusCode'] != id_status_old:
+                continue
+
+            # Проверка дистрибьютора (если требуется)
+            if check_distributor and item['distributorId'] not in DISTRIB_ID:
+                continue
+
+            id_item.append(item['id'])
+
         return [order['userId'], id_item]
+
     except Exception as ex:
-        logger.info(ex)
-        logger.info(f"От платформы пришла ошибка '{ex}' при получении данных по заказу {num_order}")
+        logger.error(f"Ошибка при получении данных по заказу {num_order}: {ex}")
         return [0, []]
 
 
@@ -48,20 +63,21 @@ async def change_status_position(num_order, list_id_pos: list, new_status: int o
         return False
 
 
-async def change_status_pos(order, id_status_old='233596', id_new_status='188361'):
+async def change_status_pos(order, id_status_old='233596', id_new_status='188361', check_distributor: bool = True):
     """
     Меняем статусы позиций заказа с id_status_old на id_new_status
     :param order: Номер заказа для изменения статуса позиций
     :param id_status_old: идентификатор статуса позиций для изменения
     :param id_new_status: идентификатор нового статуса для позиций
+    :param check_distributor: проверять ли принадлежность дистрибьютору
     :return: result
     """
     # Получить список позиций заказа со статусом id_status_old
-    id_user, list_pos = await search_order_position_to_change(order, id_status_old)
+    id_user, list_pos = await search_order_position_to_change(order, id_status_old, check_distributor=check_distributor)
     logger.info(len(list_pos))
     logger.info(list_pos)
     if len(list_pos) == 0:
-        logger.info(f"Заказ {order} не содержит позиций со статусом 'Есть в наличии'")
+        logger.info(f"Заказ {order} не содержит позиций со статусом {id_status_old}")
         return False
 
     # Изменить статус позиций заказа на id_new_status
