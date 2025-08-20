@@ -151,7 +151,10 @@ async def callbacks(call: types.CallbackQuery) -> None:
         types.InlineKeyboardButton(text="🔴 Отмена", callback_data=f"stop_assembl_no_{time_call}")
     ]
     keyboard.add(*buttons)
-    await call.message.edit_reply_markup(reply_markup=keyboard)
+    try:
+        await call.message.edit_reply_markup(reply_markup=keyboard)
+    except MessageNotModified:
+        logger.error(f"Было повторное нажатие кнопки")
 
 
 @dp.callback_query_handler(Text(startswith="stop_assembl_no"))
