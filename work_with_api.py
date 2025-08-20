@@ -93,7 +93,7 @@ async def create_by(id_contract: int, list_id_pos: list, new_status: int or str 
             agreement_id=id_contract, account_details_id=8183, loc_id=0,
             pp_ids=list_id_pos, status_id=new_status, done_right_away=1
         )
-        logger.info(result)
+        # logger.info(result)
         return True
     except Exception as ex:
         logger.info(ex)

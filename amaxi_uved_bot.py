@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+from aiogram.utils.exceptions import MessageNotModified
 
 from config import TOKEN, DICT_EMPLOYEE, FILE_NAME_LOG
 from aiogram import Bot, Dispatcher, executor, types
@@ -40,12 +41,16 @@ async def callbacks(call: types.CallbackQuery) -> None:
     ]
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(*buttons)
-    await bot.edit_message_reply_markup(chat_id=call.message.chat.id,
-                                        message_id=call.message.message_id,
-                                        reply_markup=keyboard)
+    try:
+        await call.message.edit_reply_markup(reply_markup=keyboard)
+    except MessageNotModified:
+        logger.error(f"Было повторное нажатие кнопки")
+    # await bot.edit_message_reply_markup(chat_id=call.message.chat.id,
+    #                                     message_id=call.message.message_id,
+    #                                     reply_markup=keyboard)
 
 
-@dp.callback_query_handler(Text(startswith="cancel_ass"))
+@dp.callback_query_handler(Text(startswith="cancel_ass_"))
 async def callbacks(call: types.CallbackQuery) -> None:
     """
     При нажатии на кнопку "🔴 Отмена" (callback_data="cancel_ass*") заменяем ИнЛайн клавиатуру на исходную.
@@ -62,7 +67,7 @@ async def callbacks(call: types.CallbackQuery) -> None:
     await call.message.edit_reply_markup(reply_markup=keyboard)
 
 
-@dp.callback_query_handler(Text(startswith="start_ass"))
+@dp.callback_query_handler(Text(startswith="start_ass_"))
 async def callbacks(call: types.CallbackQuery):
     """
     При нажатии на кнопку "🟢 Начать" (callback_data="start_ass*"):
