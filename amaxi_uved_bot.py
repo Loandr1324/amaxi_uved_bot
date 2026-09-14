@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from aiogram.utils.exceptions import MessageNotModified
 
-from config import TOKEN, DICT_EMPLOYEE, FILE_NAME_LOG
+from config import TOKEN, PROXY, DICT_EMPLOYEE, FILE_NAME_LOG
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
 from datetime import datetime
@@ -18,7 +18,7 @@ logger.add(FILE_NAME_LOG,
            compression="zip")
 
 # Инициализация бота и диспетчера
-bot = Bot(token=TOKEN)
+bot = Bot(token=TOKEN, proxy=PROXY or None)
 dp = Dispatcher(bot)
 
 
